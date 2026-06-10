@@ -799,60 +799,14 @@ tr:hover td { background: #fafaf8; }
 </div>
 
 <script>
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-
-window.firebaseAPI = {
-  initializeApp,
-  getDatabase,
-  ref,
-  get,
-  set
-};
-
-window.firebaseConfig = {
-  apiKey: "AIzaSyBK82lusG2zhPzea3huLODu2hZeosl8HZI",
-  authDomain: "little-mudland.firebaseapp.com",
-  databaseURL: "https://little-mudland-default-rtdb.firebaseio.com",
-  projectId: "little-mudland",
-  storageBucket: "little-mudland.firebasestorage.app",
-  messagingSenderId: "599634825248",
-  appId: "1:599634825248:web:f8c1587e31b5003df7ac45"
-};
-
 // ==========================================
 // 1. DATABASE & INIT
 // ==========================================
-// ==========================================
-// 1. DATABASE & INIT
-// ==========================================
-const DB_KEY = "littleMudlandDB";
+const DB_KEY = 'little_mudland_db_pro_v3';
 
-let db = {
-    customers: [],
-    products: [],
-    orders: [],
-    expenses: []
+let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
+  customers: [], products: [], orders: [], expenses: []
 };
-async function loadCloudData() {
-  try {
-    const app = window.firebaseAPI.initializeApp(window.firebaseConfig);
-    const firebaseDB = window.firebaseAPI.getDatabase(app);
-
-    const snap = await window.firebaseAPI.get(
-      window.firebaseAPI.ref(firebaseDB, DB_KEY)
-    );
-
-    if (snap.exists()) {
-      db = snap.val();
-    }
-
-    refreshUI();
-  } catch (err) {
-    console.error("Firebase load failed:", err);
-  }
-}
-let firebaseDB = null;
 
 // Migrate from old key if needed
 if (!localStorage.getItem(DB_KEY) && localStorage.getItem('little_mudland_db_pro_v2')) {
@@ -881,24 +835,11 @@ function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-async function persistData() {
-  try {
-
-    await window.firebaseAPI.set(
-      window.firebaseAPI.ref(firebaseDB, DB_KEY),
-      db
-    );
-
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-
-    refreshUI();
-
-  } catch (err) {
-
-    console.error("Firebase save failed:", err);
-
-  }
+function persistData() {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  refreshUI();
 }
+
 // Image zoom
 function openZoom(src) {
   document.getElementById('img-zoom-img').src = src;
@@ -1769,9 +1710,7 @@ function refreshUI() {
 // ==========================================
 // 13. INIT
 // ==========================================
-
-initializeCloudDB();
-
+refreshUI();
 filterSales();
 filterExpenses();
 

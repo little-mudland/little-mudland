@@ -834,7 +834,24 @@ let db = {
     orders: [],
     expenses: []
 };
+async function loadCloudData() {
+  try {
+    const app = window.firebaseAPI.initializeApp(window.firebaseConfig);
+    const firebaseDB = window.firebaseAPI.getDatabase(app);
 
+    const snap = await window.firebaseAPI.get(
+      window.firebaseAPI.ref(firebaseDB, DB_KEY)
+    );
+
+    if (snap.exists()) {
+      db = snap.val();
+    }
+
+    refreshUI();
+  } catch (err) {
+    console.error("Firebase load failed:", err);
+  }
+}
 let firebaseDB = null;
 
 // Migrate from old key if needed
@@ -864,11 +881,24 @@ function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function persistData() {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
-  refreshUI();
-}
+async function persistData() {
+  try {
 
+    await window.firebaseAPI.set(
+      window.firebaseAPI.ref(firebaseDB, DB_KEY),
+      db
+    );
+
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+
+    refreshUI();
+
+  } catch (err) {
+
+    console.error("Firebase save failed:", err);
+
+  }
+}
 // Image zoom
 function openZoom(src) {
   document.getElementById('img-zoom-img').src = src;

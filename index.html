@@ -798,15 +798,44 @@ tr:hover td { background: #fafaf8; }
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+window.firebaseAPI = {
+  initializeApp,
+  getDatabase,
+  ref,
+  get,
+  set
+};
+
+window.firebaseConfig = {
+  apiKey: "AIzaSyBK82lusG2zhPzea3huLODu2hZeosl8HZI",
+  authDomain: "little-mudland.firebaseapp.com",
+  databaseURL: "https://little-mudland-default-rtdb.firebaseio.com",
+  projectId: "little-mudland",
+  storageBucket: "little-mudland.firebasestorage.app",
+  messagingSenderId: "599634825248",
+  appId: "1:599634825248:web:f8c1587e31b5003df7ac45"
+};
+
 // ==========================================
 // 1. DATABASE & INIT
 // ==========================================
-const DB_KEY = 'little_mudland_db_pro_v3';
+// ==========================================
+// 1. DATABASE & INIT
+// ==========================================
+const DB_KEY = "littleMudlandDB";
 
-let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
-  customers: [], products: [], orders: [], expenses: []
+let db = {
+    customers: [],
+    products: [],
+    orders: [],
+    expenses: []
 };
+
+let firebaseDB = null;
 
 // Migrate from old key if needed
 if (!localStorage.getItem(DB_KEY) && localStorage.getItem('little_mudland_db_pro_v2')) {
@@ -1710,7 +1739,9 @@ function refreshUI() {
 // ==========================================
 // 13. INIT
 // ==========================================
-refreshUI();
+
+initializeCloudDB();
+
 filterSales();
 filterExpenses();
 

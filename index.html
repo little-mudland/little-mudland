@@ -253,6 +253,33 @@ tr:hover td { background: #fafaf8; }
 .toast.success { background: var(--sage); }
 .toast.error { background: var(--danger); }
 
+/* Loading Screen */
+#app-loader {
+  position: fixed; inset: 0; background: var(--cream);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 18px;
+}
+#app-loader .loader-logo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 3px solid var(--sage-light); box-shadow: 0 4px 20px rgba(122,158,126,0.25); }
+#app-loader .loader-title { font-size: 1.5rem; font-weight: 700; color: var(--sage); }
+#app-loader .loader-sub { font-size: 0.85rem; color: var(--text-mid); font-weight: 600; }
+.loader-spinner { width: 38px; height: 38px; border: 3px solid var(--sage-light); border-top-color: var(--sage); border-radius: 50%; animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Sync badge */
+#sync-badge {
+  position: fixed; bottom: 28px; left: 28px;
+  background: var(--white); border: 1px solid var(--cream-mid);
+  border-radius: 20px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700;
+  color: var(--text-mid); display: flex; align-items: center; gap: 6px;
+  z-index: 500; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  transition: 0.3s; opacity: 0; pointer-events: none;
+}
+#sync-badge.show { opacity: 1; }
+#sync-badge.saving { color: var(--warning); }
+#sync-badge.saved { color: var(--sage); }
+#sync-badge.error { color: var(--danger); }
+#sync-badge i { font-size: 0.75rem; }
+
 /* Export buttons bar */
 .export-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 
@@ -319,8 +346,23 @@ tr:hover td { background: #fafaf8; }
   .form-grid { grid-template-columns: 1fr; }
 }
 </style>
+
+<!-- Firebase SDK (compat build for plain-script usage) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- LOADING SCREEN -->
+<div id="app-loader">
+  <img class="loader-logo" src="data:image/jpeg;base64,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" alt="Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect fill=\'%237a9e7e\' width=\'100\' height=\'100\'/></svg>'">
+  <div class="loader-title">Little Mudland</div>
+  <div class="loader-sub">Loading your business data…</div>
+  <div class="loader-spinner"></div>
+</div>
+
+<!-- SYNC BADGE -->
+<div id="sync-badge"><i class="fas fa-cloud"></i> <span id="sync-text">Saved</span></div>
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
@@ -800,31 +842,38 @@ tr:hover td { background: #fafaf8; }
 
 <script>
 // ==========================================
-// 1. DATABASE & INIT
+// 1. DATABASE & INIT (Cross-Device Cloud Storage)
 // ==========================================
-const DB_KEY = 'little_mudland_db_pro_v3';
+const DB_KEY = 'little_mudland_db_pro_v3';   // local offline-cache key
+const DATA_PATH = 'little_mudland/data';     // Firebase path
 
-let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
-  customers: [], products: [], orders: [], expenses: []
+// ---- Firebase configuration ----
+const firebaseConfig = {
+  apiKey: "AIzaSyBK82lusG2zhPzea3huLODu2hZeosl8HZI",
+  authDomain: "little-mudland.firebaseapp.com",
+  databaseURL: "https://little-mudland-default-rtdb.firebaseio.com",
+  projectId: "little-mudland",
+  storageBucket: "little-mudland.appspot.com",
+  messagingSenderId: "599634825248",
+  appId: "1:599634825248:web:f8c1587e31b5003df7ac45"
 };
 
-// Migrate from old key if needed
-if (!localStorage.getItem(DB_KEY) && localStorage.getItem('little_mudland_db_pro_v2')) {
-  db = JSON.parse(localStorage.getItem('little_mudland_db_pro_v2'));
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
+let fbDB = null;
+let firebaseReady = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  fbDB = firebase.database();
+  firebaseReady = true;
+} catch (e) {
+  console.warn('Firebase failed to initialise — running in offline/local mode.', e);
 }
 
-// Migrate old single-product orders to multi-item format
-db.orders = db.orders.map(o => {
-  if (!o.items && o.productId) {
-    const sub = o.total || ((o.qty || 1) * (o.price || 0));
-    return { ...o, items: [{ productId: o.productId, qty: o.qty || 1, price: o.price || 0, subtotal: sub }] };
-  }
-  return o;
-});
-
+let db = { customers: [], products: [], orders: [], expenses: [] };
 let sortState = {};
 let searchTerms = {};
+let isInitialLoad = true;
+let resolveInitialLoad = null;
+let isSelfWriting = false;   // guards against re-rendering on our own writes
 
 function generateId(prefix) {
   return prefix + '-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase();
@@ -835,9 +884,93 @@ function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function persistData() {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
+function setSyncBadge(state, text) {
+  const badge = document.getElementById('sync-badge');
+  const label = document.getElementById('sync-text');
+  badge.className = 'show ' + state;
+  label.textContent = text;
+  if (state === 'saved') {
+    clearTimeout(badge._hideTimer);
+    badge._hideTimer = setTimeout(() => badge.classList.remove('show'), 3000);
+  }
+}
+
+// Firebase can drop empty arrays / turn sparse arrays into objects — normalise back.
+function normalizeArrays() {
+  ['customers','products','orders','expenses'].forEach(k => {
+    if (!db[k]) db[k] = [];
+    else if (!Array.isArray(db[k])) db[k] = Object.values(db[k]);
+  });
+  // Migrate old single-product orders to multi-item format
+  db.orders = db.orders.map(o => {
+    if (!o.items && o.productId) {
+      const sub = o.total || ((o.qty || 1) * (o.price || 0));
+      return { ...o, items: [{ productId: o.productId, qty: o.qty || 1, price: o.price || 0, subtotal: sub }] };
+    }
+    return o;
+  });
+}
+
+// Save the whole database to Firebase (and keep a local offline copy).
+async function persistData() {
+  // Always keep an offline backup immediately
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(_) {}
+
+  if (!firebaseReady) {
+    setSyncBadge('error', 'Offline — saved on this device');
+    refreshUI();
+    return;
+  }
+
+  setSyncBadge('saving', 'Syncing…');
+  isSelfWriting = true;
+  try {
+    await fbDB.ref(DATA_PATH).set(db);
+    setSyncBadge('saved', 'Synced to cloud ✓');
+  } catch(e) {
+    setSyncBadge('error', 'Sync failed — saved locally');
+  } finally {
+    // Release the self-write guard shortly after, once the echo event has passed
+    setTimeout(() => { isSelfWriting = false; }, 400);
+  }
   refreshUI();
+}
+
+// Attach a realtime listener. Fires on first load AND whenever another device edits.
+function loadData() {
+  return new Promise((resolve) => {
+    resolveInitialLoad = resolve;
+
+    // Seed UI instantly from offline cache while we wait for the cloud
+    try {
+      const cached = localStorage.getItem(DB_KEY) || localStorage.getItem('little_mudland_db_pro_v2');
+      if (cached) { db = JSON.parse(cached); normalizeArrays(); }
+    } catch(_) {}
+
+    if (!firebaseReady) { resolve(); return; }
+
+    fbDB.ref(DATA_PATH).on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val && (val.customers || val.products || val.orders || val.expenses)) {
+        db = val;
+        normalizeArrays();
+      }
+
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        resolve();
+      } else if (!isSelfWriting) {
+        // A change arrived from another device — refresh the screen live
+        refreshUI();
+        filterSales();
+        filterExpenses();
+        setSyncBadge('saved', 'Updated from another device ✓');
+      }
+    }, (err) => {
+      console.warn('Firebase read error — using local cache.', err);
+      if (isInitialLoad) { isInitialLoad = false; resolve(); }
+    });
+  });
 }
 
 // Image zoom
@@ -1497,14 +1630,14 @@ function doImport(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const imported = JSON.parse(e.target.result);
       if (!imported.customers || !imported.products || !imported.orders || !imported.expenses)
         return showToast('Invalid backup file.', 'error');
       if (!confirm('This will replace all current data. Are you sure?')) return;
       db = imported;
-      persistData(); filterSales(); filterExpenses();
+      await persistData(); filterSales(); filterExpenses();
       showToast('Data restored successfully!');
     } catch(err) { showToast('Failed to parse backup file.', 'error'); }
   };
@@ -1710,15 +1843,35 @@ function refreshUI() {
 // ==========================================
 // 13. INIT
 // ==========================================
-refreshUI();
-filterSales();
-filterExpenses();
+async function initApp() {
+  // Wait for the cloud, but never hang the loader more than 8 seconds
+  await Promise.race([
+    loadData(),
+    new Promise(res => setTimeout(res, 8000))
+  ]);
 
-if (db.products.length === 0 && db.customers.length === 0) {
-  db.customers.push({ id: 'CUS-TEST', name: 'Tasnim Ahmed', ig: '@tasnim_clay', phone: '01712345678', address: 'Dhaka' });
-  db.products.push({ id: 'PRD-TEST', code: 'MUG-01', name: 'Floral Custom Mug', price: 1200, desc: 'Handpainted ceramic', image: '' });
-  persistData();
+  normalizeArrays();
+
+  // Seed sample data ONLY if the database is truly empty (first ever use).
+  // This prevents accidentally re-adding demo rows on a device that synced late.
+  if (firebaseReady && db.products.length === 0 && db.customers.length === 0 && !isInitialLoad) {
+    db.customers.push({ id: 'CUS-TEST', name: 'Tasnim Ahmed', ig: '@tasnim_clay', phone: '01712345678', address: 'Dhaka' });
+    db.products.push({ id: 'PRD-TEST', code: 'MUG-01', name: 'Floral Custom Mug', price: 1200, desc: 'Handpainted ceramic', image: '' });
+    await persistData();
+  }
+
+  refreshUI();
+  filterSales();
+  filterExpenses();
+
+  // Hide loader
+  const loader = document.getElementById('app-loader');
+  loader.style.opacity = '0';
+  loader.style.transition = 'opacity 0.4s';
+  setTimeout(() => loader.style.display = 'none', 400);
 }
+
+initApp();
 </script>
 </body>
 </html>
